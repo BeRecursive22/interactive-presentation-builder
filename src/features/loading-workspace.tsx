@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 
 const EmptySessionFallback = () => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [progress, setProgress] = useState(0);
 
   const steps = [
     {
@@ -20,16 +19,7 @@ const EmptySessionFallback = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setProgress(prev => {
-        const newProgress = prev + 2;
-        
-        // Update current step based on progress
-        if (newProgress >= 25 && currentStep < 1) setCurrentStep(1);
-        else if (newProgress >= 50 && currentStep < 2) setCurrentStep(2);
-        else if (newProgress >= 75 && currentStep < 3) setCurrentStep(3);
-        
-        return newProgress > 100 ? 100 : newProgress;
-      });
+      setCurrentStep(prev => prev + 1);
     }, 80);
 
     return () => clearInterval(interval);
@@ -40,41 +30,6 @@ const EmptySessionFallback = () => {
       {/* Main content container */}
       <div className="flex flex-col items-center gap-8 max-w-md w-full">
         
-        {/* Primary visual indicator */}
-        <div className="relative">
-          {/* Outer pulsing ring */}
-          <div className="absolute inset-0 w-24 h-24 bg-primary/20 rounded-full animate-ping"></div>
-          <div className="absolute inset-2 w-20 h-20 bg-primary/30 rounded-full animate-ping animation-delay-200"></div>
-          
-          {/* Main icon container */}
-          <div className="relative w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center border-2 border-primary/20">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-full flex items-center justify-center shadow-lg">
-              <Map className="w-8 h-8 text-primary-foreground" />
-            </div>
-          </div>
-          
-          {/* Spinning progress indicator */}
-          <div className="absolute inset-0 w-24 h-24">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-primary/20"
-                stroke="currentColor"
-                strokeWidth="2"
-                fill="none"
-                d="M18 2.0845 a 16 16 0 0 1 0 31.831 a 16 16 0 0 1 0 -31.831"
-              />
-              <path
-                className="text-primary transition-all duration-300 ease-out"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                fill="none"
-                strokeDasharray={`${progress}, 100`}
-                d="M18 2.0845 a 16 16 0 0 1 0 31.831 a 16 16 0 0 1 0 -31.831"
-              />
-            </svg>
-          </div>
-        </div>
 
         {/* Status text */}
         <div className="text-center space-y-3">
@@ -93,16 +48,16 @@ const EmptySessionFallback = () => {
               key={index}
               className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-500 ${
                 index <= currentStep 
-                  ? 'bg-primary/5 border border-primary/20' 
+                  ? 'bg-background border border-border' 
                   : 'bg-muted/30 border border-transparent'
               }`}
             >
               {/* Step icon */}
               <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
                 index < currentStep 
-                  ? 'bg-primary text-primary-foreground' 
+                  ? 'bg-background text-foreground' 
                   : index === currentStep
-                    ? 'bg-primary/20 text-primary animate-pulse'
+                    ? 'bg-background text-foreground animate-pulse'
                     : 'bg-muted text-muted-foreground'
               }`}>
                 {index < currentStep ? (

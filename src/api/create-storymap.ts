@@ -5,9 +5,11 @@ import ky from "ky"
 
 export const createStorymap = async (sessionId: string) => {
     try {
-        const response = await ky.post(`${API_URL}/api/v1/create-storymap`, {
+        const response = await ky.post(`${API_URL}/v1/storymap/create-story-map`, {
             json: {
                 session_id: sessionId,
+                // usecase: "storymap",
+                // user_query: "Create a storymap"
             },
             timeout: 30000
         })
@@ -21,7 +23,29 @@ export const createStorymap = async (sessionId: string) => {
 
 
 interface CreateStorymapResponse {
-    storymap_url: string
-    storymap_id: string
-    message: string
+    status: string;
+    data: {
+        session: {
+            session_id: string;
+            session_title: string;
+            created_at: string;
+        };
+        story_map: {
+            id: number;
+            item_id: string | null;
+            status: string;
+            user_query: string;
+            usecase: string;
+            events: {
+                event: {
+                    text: string;
+                    success: boolean;
+                };
+                status: string;
+            }[];
+            item_data: Record<string, unknown>;
+            created_at: string;
+            session: string;
+        };
+    };
 }

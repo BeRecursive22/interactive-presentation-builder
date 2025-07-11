@@ -12,7 +12,7 @@ export default function App () {
       <ResizablePanel defaultSize={70} className="w-full h-full">
         <Preview />
       </ResizablePanel>
-      <ResizableHandle className="h-full" />
+      <ResizableHandle className="h-full bg-border/30" />
       <ResizablePanel defaultSize={30} className="w-full h-full">
         <Chat />
       </ResizablePanel>
