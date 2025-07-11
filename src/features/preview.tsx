@@ -42,7 +42,6 @@ export const Preview = () => {
       const storyMapId = data.data.story_map.id.toString();
       setCurrentStoryId(storyMapId);
       
-      // Start polling for the storymap status
       setIsPolling(true);
       setCurrentStatus("Initializing storymap...");
       startPolling(storyMapId);
@@ -59,26 +58,23 @@ export const Preview = () => {
     onSuccess: (data) => {
       console.log("polling data", data);
       
-      // Update the current status from the response
       const storyMapStatus = data.data.story_map.status;
       const latestEvent = data.data.story_map.events[data.data.story_map.events.length - 1];
       
-      // Set a user-friendly status message
       if (latestEvent?.event?.text) {
         setCurrentStatus(latestEvent.event.text);
       } else {
-        // Fallback to story map status with friendly messages
         switch (storyMapStatus) {
-          case "pending":
+          case "INITIATED":
             setCurrentStatus("Preparing storymap...");
             break;
-          case "processing":
+          case "GENERATING_STORYMAP":
             setCurrentStatus("Generating storymap...");
             break;
-          case "completed":
+          case "COMPLETED":
             setCurrentStatus("Finalizing storymap...");
             break;
-          case "failed":
+          case "FAILED":
             setCurrentStatus("Storymap creation failed");
             break;
           default:
@@ -86,9 +82,7 @@ export const Preview = () => {
         }
       }
       
-      // Check if the storymap is complete
-      if (data.data.story_map.status === "completed" && data.data.story_map.item_data.url) {
-        // Set the active storymap with both ID and URL
+      if (data.data.story_map.status === "COMPLETED" && data.data.story_map.item_data.url) {
         setActiveStorymap({
           id: data.data.story_map.id.toString(),
           url: data.data.story_map.item_data.url
@@ -96,19 +90,17 @@ export const Preview = () => {
         setIsPolling(false);
         setCurrentStoryId(null);
         setCurrentStatus("Loading preview...");
-      } else if (data.data.story_map.status === "failed") {
-        // Handle failed status
+      } else if (data.data.story_map.status === "FAILED") {
         console.error("Storymap creation failed");
         setIsPolling(false);
         setCurrentStoryId(null);
         setCurrentStatus("Storymap creation failed");
       } else {
-        // Continue polling if still in progress
         setTimeout(() => {
           if (currentStoryId) {
             pollStorymapMutation.mutate(currentStoryId);
           }
-        }, 5000); // Poll every 5 seconds
+        }, 5000); 
       }
     },
     onError: (error) => {
@@ -119,7 +111,7 @@ export const Preview = () => {
         if (currentStoryId && isPolling) {
           pollStorymapMutation.mutate(currentStoryId);
         }
-      }, 5000); // Retry after 5 seconds on error
+      }, 5000); 
     },
   });
 
@@ -153,14 +145,12 @@ export const Preview = () => {
     setIframeError(true);
   };
 
-  // Create session on mount
   useEffect(() => {
     if (!sessionId) {
       callCreateSession();
     }
   }, [sessionId, callCreateSession]);
 
-  // Create storymap when triggered from chat
   useEffect(() => {
     if (sessionId && shouldCreateStorymap && !activeStorymap?.url && !isPolling) {
       setCurrentStatus("Creating storymap...");
@@ -169,7 +159,6 @@ export const Preview = () => {
     }
   }, [sessionId, shouldCreateStorymap, callCreateStorymap, activeStorymap?.url, isPolling, resetStorymapTrigger]);
 
-  // Cleanup polling on unmount
   useEffect(() => {
     return () => {
       setIsPolling(false);
