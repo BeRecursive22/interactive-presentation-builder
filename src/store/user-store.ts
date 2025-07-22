@@ -5,7 +5,7 @@ interface UserStore {
     sessionId: string | null
     setSessionId: (sessionId: string) => void
     streamId: string | null;
-    setStreamId: (streamId: string) => void,
+    setStreamId: (streamId: string | null) => void,
     activeStorymap: {
         id: string
         url: string
@@ -25,7 +25,7 @@ export const useUserStore = create<UserStore>((set) => ({
     sessionId: null,
     setSessionId: (sessionId: string) => set({ sessionId }),
     streamId: null,
-    setStreamId: (streamId: string) => set({streamId: streamId}),
+    setStreamId: (streamId) => set({streamId: streamId}),
     activeStorymap: null,
     setActiveStorymap: (storymap: { id: string, url: string }) => set({ activeStorymap: storymap }),
     shouldCreateStorymap: false,
