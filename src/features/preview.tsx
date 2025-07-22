@@ -148,8 +148,10 @@ export const Preview = () => {
   useEffect(() => {
     if (!sessionId) {
       callCreateSession();
+    } else if(sessionId && !activeStorymap?.url) {
+      callCreateStorymap(sessionId);
     }
-  }, [sessionId, callCreateSession]);
+  }, [sessionId, callCreateSession, callCreateStorymap, activeStorymap?.url]);
 
   useEffect(() => {
     if (sessionId && shouldCreateStorymap && !activeStorymap?.url && !isPolling) {

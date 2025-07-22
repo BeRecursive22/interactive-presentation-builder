@@ -1,4 +1,4 @@
-import { API_URL } from "@/config";
+import { BASE_URL } from "@/config";
 import ky from "ky";
 
 
@@ -6,7 +6,7 @@ import ky from "ky";
 export const storymapStatusPoll = async (storyId: string) => {
     
     try {
-        const response = await ky.get(`${API_URL}/v1/storymap/poll-story-map/${storyId}`, {
+        const response = await ky.get(`${BASE_URL}/v1/storymap/poll-story-map/${storyId}`, {
             timeout: 30000
         });
         const data = await response.json<StorymapStatusPollResponse>();

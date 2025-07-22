@@ -1,11 +1,11 @@
-import { API_URL } from "@/config"
+import { BASE_URL } from "@/config"
 import ky from "ky"
 
 
 
 export const createStorymap = async (sessionId: string) => {
     try {
-        const response = await ky.post(`${API_URL}/v1/storymap/create-story-map`, {
+        const response = await ky.post(`${BASE_URL}/v1/storymap/create-story-map`, {
             json: {
                 session_id: sessionId,
                 // usecase: "storymap",

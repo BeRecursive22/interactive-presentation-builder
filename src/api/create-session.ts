@@ -1,9 +1,9 @@
-import { API_URL } from "@/config";
+import { BASE_URL } from "@/config";
 import ky from "ky";
 
 export const createSession = async () => {
   try {
-    const response = await ky.post(`${API_URL}/v1/storymap/create-session`);
+    const response = await ky.post(`${BASE_URL}/v1/storymap/create-session`);
     const data = await response.json<CreateSessionResponse>();
     return data;
   } catch (error) {
