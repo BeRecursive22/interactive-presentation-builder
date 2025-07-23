@@ -3,9 +3,10 @@ import { createChatStream } from "@/api/create-chat-stream";
 import { LocationPin } from "@/assets/location-pin-svg";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
 import { useMutation } from "@tanstack/react-query";
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Check, Copy } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -71,7 +72,14 @@ export const Chat = () => {
       createStreamManager({ 
         sessionId: sessionId!, 
         streamId: streamId!, 
-        onChunk: (chunk) => {
+        onStreamStart() {
+          setStreamId(streamId!)
+        },
+        onStreamStop: () => {
+          console.log("Stream stopped");
+          setStreamId(null);
+        },
+        onStreaming: (chunk) => {
           console.log("Chunk:", chunk);
           setMessages(prev => {
             const newMessages = [...prev];
@@ -93,7 +101,7 @@ export const Chat = () => {
   }, [streamId, sessionId]);
 
   return (
-    <div className="w-full h-full flex flex-col relative bg-pearl-gray/20">
+    <div className="w-full h-full flex flex-col bg-pearl-gray/20 relative z-0">
       <ChatHeader />
       <ChatMessages 
         messages={messages} 
@@ -102,7 +110,7 @@ export const Chat = () => {
         setAutoScroll={setAutoScroll}
         isUserScrolling={isUserScrolling}
         setIsUserScrolling={setIsUserScrolling}
-      />
+        />
       <ChatInput 
         inputValue={inputValue}
         setInputValue={setInputValue}
@@ -113,7 +121,7 @@ export const Chat = () => {
 };
 
 const ChatHeader = () => {
-  const { selectedTemplate } = useUserStore();
+  // const { selectedTemplate } = useUserStore();
   
   return (
     <div className="w-full h-11 flex items-center justify-between gap-2 px-4 border-b border-border/30 relative">
@@ -124,7 +132,7 @@ const ChatHeader = () => {
         <span className="text-sm font-medium text-accent-foreground">LM</span>
       </div>
       <div className="flex items-center border border-border/30 rounded-sm">
-        <span className=" px-2 py-1 text-xs truncate font-light text-accent-foreground">{selectedTemplate?.id}</span>
+        {/* <span className=" px-2 py-1 text-xs truncate font-light text-accent-foreground">{selectedTemplate?.id}</span> */}
         <TemplatesDrawer />
       </div>
     </div>
@@ -158,17 +166,19 @@ const ChatMessages = ({
   autoScroll, 
   setAutoScroll, 
   isUserScrolling, 
-  setIsUserScrolling 
+  setIsUserScrolling,
 }: { 
   messages: Array<{type: 'user' | 'assistant', content: string}>,
   onSendMessage: (content: string) => void,
   autoScroll: boolean,
   setAutoScroll: (value: boolean) => void,
   isUserScrolling: boolean,
-  setIsUserScrolling: (value: boolean) => void
+  setIsUserScrolling: (value: boolean) => void,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showCopiedMessage, setShowCopiedMessage] = useState(false);
+  const { streamId } = useUserStore();
 
   // Auto scroll to bottom function
   const scrollToBottom = useCallback(() => {
@@ -221,22 +231,28 @@ const ChatMessages = ({
       onScroll={handleScroll}
       className="flex-1 flex-col overflow-y-auto relative mb-2"
     >
-      {/* Show query prompts when there are no messages */}
       {messages.length === 0 && (
         <QueryPrompts onSendMessage={onSendMessage} />
       )}
       
-      {/* Show messages */}
       {messages.length > 0 && (
-        <div className="p-4 space-y-2">
+        <div className="px-4 py-4">
           {messages.map((message, index) => (
-            <div key={index} className={`flex`}>
+            <div key={index} className="flex gap-2">
               <div className={`w-full ${message.type === "assistant" && "flex flex-col"}`}>
-                <div className={`${message.type === 'user' ? 'px-3' : 'px-1'} py-2 rounded-md text-sm text-graphite font-light ${
+                <div className={`${message.type === 'user' ? 'px-3 py-2 flex items-center' : 'px-1 py-2'} rounded-md text-sm text-graphite font-light ${
                   message.type === 'user'
-                    ? 'bg-pearl-gray border border-border/20 text-[13px] text-graphite font-normal'
+                    ? 'bg-pearl-gray border border-border/20 text-md text-graphite font-normal'
                     : ''
                 }`}>
+                  
+                  {message.type === "assistant" && (
+                    <div className="flex items-center justify-start gap-2 mt-3">
+                      <span className="w-2 h-2 rounded-full bg-orange-600"></span>
+                      <span className="text-xs text-border font-light">Oynx</span>
+                    </div>
+                  )}
+
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeRaw]}
@@ -275,7 +291,7 @@ const ChatMessages = ({
                       p({ children, ...props }) {
                         return (
                           <p
-                            className="mb-2 whitespace-pre-line overflow-wrap-break-word"
+                            className="mb-0 whitespace-pre-line overflow-wrap-break-word leading-relaxed"
                             {...props}
                           >
                             {children}
@@ -284,7 +300,7 @@ const ChatMessages = ({
                       },
                       h1({ children, ...props }) {
                         return (
-                          <h1 className="text-lg font-semibold mt-6 mb-4" {...props}>
+                          <h1 className="text-lg font-semibold mt-2 mb-4" {...props}>
                             {children}
                           </h1>
                         );
@@ -387,6 +403,41 @@ const ChatMessages = ({
                   >
                     {message.content}
                   </ReactMarkdown>
+
+                  {/* Copy button for assistant messages only */}
+                  {message.type === "assistant" && !streamId && (
+                    <div className="flex items-center justify-end gap-2">
+                      <Tooltip>
+                        <TooltipTrigger> 
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="w-4 h-4 text-border hover:text-obsidian-black hover:cursor-pointer" 
+                            onClick={() => {
+                              navigator.clipboard.writeText(message.content);
+                              setShowCopiedMessage(true);
+                              setTimeout(() => {
+                                setShowCopiedMessage(false);
+                              }, 2000);
+                            }}
+                          >
+                            {showCopiedMessage ? (
+                              <Check className="w-4 h-4 transition-all duration-300" strokeWidth={1.5} />
+                            ) : (
+                              <Copy className="w-4 h-4" strokeWidth={1.5} />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          arrowClassName="bg-charcoal-gray fill-charcoal-gray"
+                          side="top"
+                          className="rounded-sm bg-charcoal-gray text-white border-obsidian-black shadow-[0_0_10px_rgba(0,0,0,0.1)]"
+                        >
+                          Copy to clipboard
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -394,22 +445,6 @@ const ChatMessages = ({
         </div>
       )}
       <div ref={messagesEndRef} />
-      
-      {/* Auto-scroll indicator */}
-      {/* {!autoScroll && (
-        <div className="absolute bottom-4 right-4 z-10">
-          <button
-            onClick={() => {
-              setAutoScroll(true);
-              setIsUserScrolling(false);
-              scrollToBottom();
-            }}
-            className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs shadow-lg hover:bg-blue-600 transition-colors"
-          >
-            ↓ Scroll to bottom
-          </button>
-        </div>
-      )} */}
     </div>
   );
 };
@@ -437,14 +472,15 @@ const ChatInput = ({
   };
 
   return (
-    <div className="bg-transparent px-3 mb-2 shadow-lg shadow-background relative">
+    <div className="bg-transparent px-3 mb-2 shadow-lg shadow-background relative z-20">
       <div className="relative bg-none">
+        <TheTicker />
         <Textarea
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
           placeholder="Create a storymap for..."
-          className="w-full pr-12 resize-none min-h-[80px] placeholder:text-muted-foreground font-light max-h-40 bg-primary-foreground border border-border/30 ring-accent-foreground focus:outline-none focus:ring-0 shadow-md"
+          className="w-full pr-12 resize-none min-h-[80px] placeholder:text-muted-foreground font-light max-h-40 bg-primary-foreground border border-border/30 ring-none focus:outline-none focus-visible:ring-0"
           rows={10}
         />
         <Button
@@ -464,5 +500,35 @@ const ChatInput = ({
 export default Chat;
 
 
+
+const TheTicker = () => {
+  const { streamId } = useUserStore();
+  const [dots, setDots] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prev) => (prev + 1) % 4);
+    }, 200);
+    return () => clearInterval(interval);
+  }, []);
+  return (
+<div className={`absolute -top-7.5 -z-1 w-[90%] left-1/2 h-8 bg-primary-foreground border-t 
+  border-x rounded-t-sm border-border/30 flex items-center justify-between px-4 -translate-x-1/2 transition-all duration-300
+  ${streamId ? "translate-y-0" : "translate-y-full"}`}>
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 rounded-full bg-transparent flex items-center justify-center">
+          <LocationPin />
+        </div>
+        <span className="text-sm text-graphite font-medium tracking-tighter">Oynx is running</span>
+        {Array.from({ length: dots }).map((_, index) => (
+          <span key={index} className="text-sm text-graphite -ml-1.5">.</span>
+        ))}
+      </div>
+      <div className="text-sm text-muted-foreground">
+        {/* {streamId ? "Processing..." : "Waiting for response..."} */}
+      </div>
+    </div>
+  )
+}
 
 

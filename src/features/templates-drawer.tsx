@@ -9,8 +9,9 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ALL_TEMPLATES } from "@/templates/all-templates";
-import { PanelRight } from "lucide-react";
+import { Clock } from "lucide-react";
 import { useState } from "react";
 import { TemplatePreview } from "./template-preview";
 
@@ -25,14 +26,25 @@ export function TemplatesDrawer() {
       // 4. Control the Sheet with the `open` and `onOpenChange` props
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
-          <Button
+                    <Tooltip>
+                    <TooltipTrigger> 
+                    <Button
             onClick={() => setIsOpen(true)} // Manually trigger open
             variant="outline"
-            className="w-fit h-fit bg-orange-600/90 text-white p-0 py-1 border border-orange-500 text-xs rounded-[6px] hover:bg-orange-600/80 hover:text-white font-normal cursor-pointer"
+            className="w-fit h-fit relative bg-obsidian-black p-0 py-1 border border-obsidian-black px-2 opacity-80 text-xs text-white/50 rounded-[6px] hover:bg-obsidian-black/95 hover:text-white/50 font-normal cursor-pointer"
           >
-            <PanelRight className="w-4 h-4" />
+            <Clock className="!w-3 !h-3" size={6} />
             Templates
           </Button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      arrowClassName="bg-charcoal-gray fill-charcoal-gray"
+                      side="top"
+                      className="rounded-sm bg-charcoal-gray text-white border-obsidian-black shadow-[0_0_10px_rgba(0,0,0,0.1)]"
+                    >
+                        coming soon...
+                    </TooltipContent>
+                  </Tooltip>
         </SheetTrigger>
   
         <SheetContent side="right" className="w-[400px] sm:max-w-[1000px] bg-input backdrop-blur-sm border-none px-2 rounded-l-sm pb-4">

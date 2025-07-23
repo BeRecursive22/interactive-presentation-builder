@@ -5,20 +5,20 @@ import { BASE_URL } from "@/config";
 interface StreamManagerOptions {
   sessionId: string;
   streamId: string;
-  onStart?: () => void;
-  onChunk?: (chunk: string) => void;
-  onStop?: () => void;
+  onStreamStart?: () => void;
+  onStreaming?: (chunk: string) => void;
+  onStreamStop?: () => void;
   onError?: (error: Event) => void;
 }
 
 export function createStreamManager(options: StreamManagerOptions) {
-  const { sessionId, streamId, onStart, onChunk, onStop, onError } = options;
+  const { sessionId, streamId, onStreamStart, onStreaming, onStreamStop, onError } = options;
   // The URL should not have sessionId in it, based on your Python code
   const eventSource = new EventSource(`${BASE_URL}/v1/storymap/chat/${sessionId}/stream/${streamId}`);
 
   eventSource.addEventListener('stream_start', (event) => {
     console.log("✅ Manager: Stream Start: ", event.data);
-    onStart?.();
+    onStreamStart?.();
   });
 
   eventSource.addEventListener('streaming', (event) => {
@@ -27,7 +27,7 @@ export function createStreamManager(options: StreamManagerOptions) {
     try {
       const parsedData = JSON.parse(event.data);
       // Now, parsedData is the clean string: **Hello**
-      onChunk?.(parsedData);
+      onStreaming?.(parsedData);
     } catch (e) {
       console.error("❌ Manager: Failed to parse stream chunk:", e);
     }
@@ -35,7 +35,7 @@ export function createStreamManager(options: StreamManagerOptions) {
 
   eventSource.addEventListener('stream_stop', (event) => {
     console.log("🛑 Manager: Stream Stop: ", event.data);
-    onStop?.();
+    onStreamStop?.();
     eventSource.close();
   });
 
