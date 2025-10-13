@@ -3,7 +3,7 @@ import ky from "ky";
 
 export const createSession = async () => {
   try {
-    const response = await ky.post(`${BASE_URL}/v1/storymap/create-session`);
+    const response = await ky.post(`${BASE_URL}/v1/storymap/create-chat-session`);
     const data = await response.json<CreateSessionResponse>();
     return data;
   } catch (error) {
@@ -14,11 +14,9 @@ export const createSession = async () => {
 
 interface CreateSessionResponse {
   data: {
-    session: {
       session_id: string;
       created_at: string;
       session_title: string;
-    };
   };
   status: string;
 }
