@@ -2,9 +2,12 @@ import { createStreamManager } from "@/api/chat-event-stream";
 import { createChatStream } from "@/api/create-chat-stream";
 import { LocationPin } from "@/assets/location-pin-svg";
 import { Button } from "@/components/ui/button";
+import { JobStatusIndicator } from "@/components/ui/job-status-indicator";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
+import type { JobStatusEventType } from "@/types/events.types";
+import type { StorymapTemplate } from "@/types/storymap.types";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, Check, Copy } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -12,12 +15,13 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from 'remark-gfm';
-import { TemplatesDrawer } from "./templates-drawer";
+import { v4 as uuidv4 } from 'uuid';
+
 
 const queries = [
-  "Build me a showcase for 1 S Main St, Bel Air, MD 21014 for use as a Restaurant",
-  "Build me a showcase for 123 Market Street, San Francisco, CA 94105 for use as a Retail",
-  "Build me a showcase for 555 Madison Avenue, New York, NY 10022 for use as an Office",
+  "Build me an interactive presentation for 1 S Main St, Bel Air, MD 21014 for use as a Restaurant",
+  "Build me an interactive presentation for 123 Market Street, San Francisco, CA 94105 for use as a Retail",
+  "Build me an interactive presentation for 555 Madison Avenue, New York, NY 10022 for use as an Office",
 ];
 
 export const Chat = () => {
@@ -25,7 +29,7 @@ export const Chat = () => {
   const [inputValue, setInputValue] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
-  const { sessionId, setStreamId, streamId } = useUserStore();
+  const { sessionId, setStreamId, streamId, setStorymapContent  } = useUserStore();
 
   const { mutate: chatMutation } = useMutation({
     mutationFn: async (variables: { prompt: string } ) => {
@@ -74,10 +78,14 @@ export const Chat = () => {
         streamId: streamId!, 
         onStreamStart() {
           setStreamId(streamId!)
+          const setJobStatus = useUserStore.getState().setJobStatus;
+          setJobStatus([]);
         },
         onStreamStop: () => {
           console.log("Stream stopped");
           setStreamId(null);
+          const setJobStatus = useUserStore.getState().setJobStatus;
+          setJobStatus([]);
         },
         onStreaming: (chunk) => {
           console.log("Chunk:", chunk);
@@ -95,10 +103,32 @@ export const Chat = () => {
             
             return newMessages;
           });
-        } 
+        },
+        onStorymapMessage: (message: StorymapTemplate) => {
+          console.log("Storymap message: ", message);
+          setStorymapContent(message);
+        },
+        onJobStatus: (status: JobStatusEventType) => {
+          console.log("Job status: ", status);
+          // firstly we need to stop the already in progress job status and then keep the current one in progress.
+          const jobStatus = useUserStore.getState().jobStatus;
+          const setJobStatus = useUserStore.getState().setJobStatus;
+          const newJobStatus = jobStatus.map(job => ({
+            ...job,
+            isInProgress: false
+          }));
+          const currentJobStatus = {
+            id: uuidv4(),
+            message: status.message,
+            isInProgress: true,
+            streamId: streamId!
+          }
+          setJobStatus([...newJobStatus, currentJobStatus]);
+          console.log("New job status: ", newJobStatus);
+        }
       });
     }
-  }, [streamId, sessionId]);
+  }, [sessionId, streamId, setStreamId, setStorymapContent]);
 
   return (
     <div className="w-full h-full flex flex-col bg-pearl-gray/20 relative z-0">
@@ -129,11 +159,9 @@ const ChatHeader = () => {
         <div className="relative w-6 h-6 rounded-full">
           <LocationPin />
         </div>
-        <span className="text-sm font-medium text-accent-foreground">LM</span>
+        <span className="text-sm font-medium text-accent-foreground">Interactive Presentation Agent</span>
       </div>
       <div className="flex items-center border border-border/30 rounded-sm">
-        {/* <span className=" px-2 py-1 text-xs truncate font-light text-accent-foreground">{selectedTemplate?.id}</span> */}
-        <TemplatesDrawer />
       </div>
     </div>
   );
@@ -178,7 +206,9 @@ const ChatMessages = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showCopiedMessage, setShowCopiedMessage] = useState(false);
-  const { streamId } = useUserStore();
+  const { streamId, jobStatus } = useUserStore();
+
+  console.log("Job status: ", jobStatus);
 
   // Auto scroll to bottom function
   const scrollToBottom = useCallback(() => {
@@ -249,7 +279,7 @@ const ChatMessages = ({
                   {message.type === "assistant" && (
                     <div className="flex items-center justify-start gap-2 mt-3">
                       <span className="w-2 h-2 rounded-full bg-orange-600"></span>
-                      <span className="text-xs text-border font-light">Oynx</span>
+                      <span className="text-xs text-border font-light">IP Agent</span>
                     </div>
                   )}
 
@@ -444,6 +474,7 @@ const ChatMessages = ({
           ))}
         </div>
       )}
+      {jobStatus.length > 0 && <JobStatusIndicator jobStatus={jobStatus} />}
       <div ref={messagesEndRef} />
     </div>
   );
@@ -479,7 +510,7 @@ const ChatInput = ({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Create a storymap for..."
+          placeholder="Create a presentation for..."
           className="w-full pr-12 resize-none min-h-[80px] placeholder:text-muted-foreground font-light max-h-40 bg-primary-foreground border border-border/30 ring-none focus:outline-none focus-visible:ring-0"
           rows={10}
         />
@@ -519,7 +550,7 @@ const TheTicker = () => {
         <div className="w-4 h-4 rounded-full bg-transparent flex items-center justify-center">
           <LocationPin />
         </div>
-        <span className="text-sm text-graphite font-medium tracking-tighter">Oynx is running</span>
+        <span className="text-sm text-graphite font-medium tracking-tighter">Agent is running</span>
         {Array.from({ length: dots }).map((_, index) => (
           <span key={index} className="text-sm text-graphite -ml-1.5">.</span>
         ))}

@@ -1,6 +1,6 @@
-// in create-chat-stream.ts
-
 import { BASE_URL } from "@/config";
+import type { JobStatusEventType } from "@/types/events.types";
+import type { StorymapTemplate } from "@/types/storymap.types";
 
 interface StreamManagerOptions {
   sessionId: string;
@@ -9,11 +9,12 @@ interface StreamManagerOptions {
   onStreaming?: (chunk: string) => void;
   onStreamStop?: () => void;
   onError?: (error: Event) => void;
+  onStorymapMessage?: (message: StorymapTemplate) => void;
+  onJobStatus: (status: JobStatusEventType) => void;
 }
 
 export function createStreamManager(options: StreamManagerOptions) {
-  const { sessionId, streamId, onStreamStart, onStreaming, onStreamStop, onError } = options;
-  // The URL should not have sessionId in it, based on your Python code
+  const { sessionId, streamId, onStreamStart, onStreaming, onStreamStop, onError, onStorymapMessage, onJobStatus } = options;
   const eventSource = new EventSource(`${BASE_URL}/v1/storymap/chat/${sessionId}/stream/${streamId}`);
 
   eventSource.addEventListener('stream_start', (event) => {
@@ -22,12 +23,18 @@ export function createStreamManager(options: StreamManagerOptions) {
   });
 
   eventSource.addEventListener('streaming', (event) => {
-    // The raw data from the server is a JSON-encoded string (e.g., "\"**Hello**\"")
-    // We need to parse it to get the actual content.
     try {
       const parsedData = JSON.parse(event.data);
-      // Now, parsedData is the clean string: **Hello**
-      onStreaming?.(parsedData);
+      console.log("Parsed Data: ", parsedData);
+      if(parsedData.type === "presentation_content"){
+        onStorymapMessage?.(parsedData.data);
+      } else if(parsedData.type === "status" || parsedData.type === "complete"){
+        console.log("Status: ", parsedData);
+        onJobStatus?.(parsedData);
+      } else {
+        onStreaming?.(parsedData);
+        console.log("Streaming: ", parsedData);
+      }
     } catch (e) {
       console.error("❌ Manager: Failed to parse stream chunk:", e);
     }
@@ -52,3 +59,5 @@ export function createStreamManager(options: StreamManagerOptions) {
     }
   };
 }
+
+
