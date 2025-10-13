@@ -15,7 +15,6 @@ export const SidecarBlock = ({ block }: SidecarBlockProps) => {
     const mapViewRef = useRef<MapView | null>(null);
     const [activeCardIndex, setActiveCardIndex] = useState(0);
     const [mapReady, setMapReady] = useState(false);
-    const hasTriggeredInitial = useRef(false);
 
     console.log("🎬 SidecarBlock rendering", { mapRef: mapRef.current, mapViewRef: mapViewRef.current });
 
