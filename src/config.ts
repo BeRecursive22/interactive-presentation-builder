@@ -7,4 +7,13 @@ esriConfig.request.useIdentity = false;
 export const API_URL = "https://lm-interactive-presentation-builder-api-dev-bzgvc8cfhsasaxd7.eastus-01.azurewebsites.net"
 export const LOCAL_API_URL = "http://localhost:8000"
 
-export const BASE_URL = import.meta.env.MODE === "development" ? LOCAL_API_URL : API_URL
+
+const getApiUrl = () => {
+    if(import.meta.env.VITE_ENV === "production") {
+        return API_URL
+    } else {
+        return LOCAL_API_URL
+    }
+}
+
+export const BASE_URL = getApiUrl()
