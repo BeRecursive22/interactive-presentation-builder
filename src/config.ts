@@ -2,6 +2,7 @@ import esriConfig from "@arcgis/core/config";
 
 
 esriConfig.apiKey = import.meta.env.VITE_ARCGIS_API_KEY;
+esriConfig.request.useIdentity = false;
 
 export const API_URL = "https://lm-product-dev-be-cyfzfhf3gjgtezhp.eastus-01.azurewebsites.net"
 export const LOCAL_API_URL = "http://localhost:8000"
