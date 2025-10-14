@@ -8,12 +8,12 @@ export const API_URL = "https://lm-interactive-presentation-builder-api-dev-bzgv
 export const LOCAL_API_URL = "http://localhost:8000"
 
 
-const getApiUrl = () => {
-    if(import.meta.env.VITE_ENV === "production") {
-        return API_URL
-    } else {
-        return LOCAL_API_URL
-    }
-}
+// const getApiUrl = () => {
+//     if(import.meta.env.VITE_ENV === "production") {
+//         return API_URL
+//     } else {
+//         return LOCAL_API_URL
+//     }
+// }
 
-export const BASE_URL = getApiUrl()
+export const BASE_URL = API_URL
