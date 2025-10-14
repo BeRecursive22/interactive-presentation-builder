@@ -8,6 +8,8 @@ esriConfig.apiKey = import.meta.env.VITE_ARCGIS_API_KEY
 
 const queryClient = new QueryClient()
 
+console.info('arcgis api key present?', Boolean(import.meta.env.VITE_ARCGIS_API_KEY))
+
 createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <App />
