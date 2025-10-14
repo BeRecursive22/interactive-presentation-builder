@@ -4,8 +4,6 @@ import esriConfig from "@arcgis/core/config";
 esriConfig.apiKey = import.meta.env.VITE_ARCGIS_API_KEY;
 esriConfig.request.useIdentity = true;
 
-// Add OAuth configuration
-// esriConfig.portalUrl = "https://www.arcgis.com"; // or your org portal
 
 
 export const API_URL = "https://lm-product-dev-be-cyfzfhf3gjgtezhp.eastus-01.azurewebsites.net"
