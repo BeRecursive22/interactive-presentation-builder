@@ -8,11 +8,12 @@ const EmptySessionFallback = () => {
     {
       icon: <Zap className="w-5 h-5" />,
       title: "Initializing session",
-      description: "Setting up your workspace"
+      description: "Setting up your workspace",
+      subDescription: "This may take a few seconds"
     },
     {
       icon: <Map className="w-5 h-5" />,
-      title: "Creating empty storymap",
+      title: "Creating workspace",
       description: "This may take a few seconds"
     }
   ];
@@ -37,7 +38,7 @@ const EmptySessionFallback = () => {
             Creating New Session
           </h2>
           <p className="text-sm text-muted-foreground">
-            Setting up your personalized StoryMap workspace
+            Setting up your personalized workspace
           </p>
         </div>
 
