@@ -1,4 +1,6 @@
 import type { MapBlockType } from "@/types/storymap.types";
+import { Point, SpatialReference } from "@arcgis/core/geometry";
+import Graphic from "@arcgis/core/Graphic";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import Map from "@arcgis/core/Map.js";
@@ -29,7 +31,27 @@ export const MapBlock = ({ block }: MapBlockProps) => {
 
             const graphicsLayer = new GraphicsLayer({ title: "Buffer Graphics" });
 
+            const centerPoint = new Point({
+                x: block.payload.initial_map_state.longitude,
+                y: block.payload.initial_map_state.latitude,
+                spatialReference: SpatialReference.WGS84
+            });
 
+            const centerPointGraphic = new Graphic({
+                geometry: centerPoint,
+                symbol: {
+                    type: "simple-marker",
+                    style: "circle",
+                    color: [227, 139, 79, 1],
+                    size: 12,
+                    outline: {
+                        color: [255, 255, 255, 1],
+                        width: 2
+                    }
+                }
+            });
+
+            graphicsLayer.graphics.addMany([centerPointGraphic]);
 
             const map = new Map({
                 basemap: block.payload.base_style,
