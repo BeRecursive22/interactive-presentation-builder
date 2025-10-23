@@ -1,5 +1,6 @@
 import type { MapBlockType } from "@/types/storymap.types";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import Map from "@arcgis/core/Map.js";
 import MapView from "@arcgis/core/views/MapView.js";
 import { useEffect, useRef } from "react";
@@ -16,6 +17,8 @@ export const MapBlock = ({ block }: MapBlockProps) => {
     useEffect(() => {
         if(mapRef.current) {
 
+
+
             const featureLayers = block.payload.layers.map((layerInfo) => {
                 return new FeatureLayer({
                     portalItem: {
@@ -24,10 +27,13 @@ export const MapBlock = ({ block }: MapBlockProps) => {
                 });
             });
 
+            const graphicsLayer = new GraphicsLayer({ title: "Buffer Graphics" });
+
+
 
             const map = new Map({
                 basemap: block.payload.base_style,
-                layers: featureLayers
+                layers: [...featureLayers, graphicsLayer]
             });
 
             const view = new MapView({
@@ -37,7 +43,8 @@ export const MapBlock = ({ block }: MapBlockProps) => {
                 zoom: block.payload.initial_map_state.zoom,
             });
 
-            view.when(() => {
+
+            view.when(async () => {
                 console.log("Map view loaded successfully");
                 console.log("Number of layers:", map.layers.length);
                 
