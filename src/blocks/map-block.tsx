@@ -1,4 +1,5 @@
 import type { MapBlockType } from "@/types/storymap.types";
+import type { Geometry } from "@arcgis/core/geometry";
 import * as geodesicBufferOperator from "@arcgis/core/geometry/operators/geodesicBufferOperator.js";
 import Point from "@arcgis/core/geometry/Point.js";
 import SpatialReference from "@arcgis/core/geometry/SpatialReference.js";
@@ -20,6 +21,8 @@ export const MapBlock = ({ block }: MapBlockProps) => {
 
     useEffect(() => {
         if(mapRef.current) {
+
+            let buffer2Geometry: Geometry | null = null;
 
             const featureLayers = block.payload.layers.map((layerInfo) => {
                 return new FeatureLayer({
@@ -61,11 +64,11 @@ export const MapBlock = ({ block }: MapBlockProps) => {
                 const buffer = geodesicBufferOperator.execute(centerPoint, 1, {
                     unit: "miles"
                 });
-            
+
                 const buffer2 = geodesicBufferOperator.execute(centerPoint, 2, {
                     unit: "miles"
                 });
-            
+                buffer2Geometry = buffer2 as Geometry;
                 const bufferGraphic = new Graphic({
                     geometry: buffer,
                     symbol: {
@@ -161,7 +164,13 @@ export const MapBlock = ({ block }: MapBlockProps) => {
                     layer.visible = true;
                 });
 
-                await createBuffer();
+                // await createBuffer();
+
+                // view.goTo({
+                //     target: buffer2Geometry,
+                //     // zoom: 14,
+                //     duration: 1000
+                // })
             });
 
             return () => {
