@@ -1,6 +1,9 @@
 import { createSession } from "@/api/create-session";
+import { Button } from "@/components/ui/button";
+import { downloadMarkdown, storymapToMarkdown } from "@/lib/utils";
 import { useUserStore } from "@/store/user-store";
 import { DummyTemplate } from "@/tests/dummy-templates";
+import type { StorymapTemplate } from "@/types/storymap.types";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect } from "react";
 import EmptySessionFallback from "./loading-workspace";
@@ -39,6 +42,12 @@ export const StorymapPreview = () => {
 
   const { mutate: callCreateSession } = createSessionMutation;
 
+  const exportContentAsMarkdown = () => {
+    if (!storymapContent) return;
+    const markdown = storymapToMarkdown(storymapContent as StorymapTemplate);
+    downloadMarkdown("storymap.md", markdown);
+  };
+
   useEffect(() => {
     if (!sessionId) {
       callCreateSession();
@@ -52,10 +61,16 @@ export const StorymapPreview = () => {
   }
 
   return (
-    <div className="w-full h-full overflow-y-auto">
-      {storymapContent && (
-        <RenderBlocks blocks={storymapContent.presentation_blocks} />
-      )}
+    <div className="w-full h-full">
+      <div className="w-full h-12 bg-neutral-200 flex items-center justify-between p-2 px-6 shadow-md">
+        <span className="text-sm font-medium">{storymapContent?.presentation_title || "Presentation Title here..."}</span>
+        <Button onClick={() => exportContentAsMarkdown()} variant="outline">Export</Button>
+      </div>
+      <div className="w-full h-[calc(100%-48px)] overflow-y-auto">
+        {storymapContent && (
+          <RenderBlocks blocks={storymapContent.presentation_blocks} />
+        )}
+      </div>
     </div>
   );
 };
