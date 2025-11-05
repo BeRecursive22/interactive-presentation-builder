@@ -1,4 +1,4 @@
-import { createSession } from "@/api/create-session";
+import { createChatSession } from "@/api/create-chat-session";
 import { Button } from "@/components/ui/button";
 import { downloadMarkdown, storymapToMarkdown } from "@/lib/utils";
 import { useUserStore } from "@/store/user-store";
@@ -17,8 +17,8 @@ export const StorymapPreview = () => {
     setStorymapContent,
   } = useUserStore();
 
-  const createSessionMutation = useMutation({
-    mutationFn: createSession,
+  const createChatSessionMutation = useMutation({
+    mutationFn: createChatSession,
     onSuccess: (data) => {
       console.log("session data", data);
       setSessionId(data.data.session_id);
@@ -40,7 +40,7 @@ export const StorymapPreview = () => {
   // });
 
 
-  const { mutate: callCreateSession } = createSessionMutation;
+  const { mutate: callCreateSession } = createChatSessionMutation;
 
   const exportContentAsMarkdown = () => {
     if (!storymapContent) return;
