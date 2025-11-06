@@ -4,19 +4,23 @@ import { LocationPin } from "@/assets/location-pin-svg";
 import { Button } from "@/components/ui/button";
 import { JobStatusIndicator } from "@/components/ui/job-status-indicator";
 import { Textarea } from "@/components/ui/textarea";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useUserStore } from "@/store/user-store";
 import type { JobStatusEventType } from "@/types/events.types";
 import type { StorymapTemplate } from "@/types/storymap.types";
 import { useMutation } from "@tanstack/react-query";
-import { ArrowRight, Check, Copy } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { ArrowRight, Check, Copy } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import solarizedDarkAtom from "react-syntax-highlighter/dist/esm/styles/prism/solarized-dark-atom";
 import rehypeRaw from "rehype-raw";
-import remarkGfm from 'remark-gfm';
-import { v4 as uuidv4 } from 'uuid';
-
+import remarkGfm from "remark-gfm";
+import { v4 as uuidv4 } from "uuid";
 
 const queries = [
   "Build me an interactive presentation for 1 S Main St, Bel Air, MD 21014 for use as a Restaurant",
@@ -25,59 +29,68 @@ const queries = [
 ];
 
 export const Chat = () => {
-  const [messages, setMessages] = useState<Array<{type: 'user' | 'assistant', content: string}>>([]);
-  const [inputValue, setInputValue] = useState('');
+  const [messages, setMessages] = useState<
+    Array<{ type: "user" | "assistant"; content: string }>
+  >([]);
+  const [inputValue, setInputValue] = useState("");
   const [autoScroll, setAutoScroll] = useState(true);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
-  const { sessionId, setStreamId, streamId, setStorymapContent  } = useUserStore();
+  const { sessionId, setStreamId, streamId, setStorymapContent, setIsProcessingMessage, isProcessingMessage } =
+    useUserStore();
 
   const { mutate: chatMutation } = useMutation({
-    mutationFn: async (variables: { prompt: string } ) => {
+    mutationFn: async (variables: { prompt: string }) => {
       const { prompt } = variables;
       return await createChatStream({ sessionId: sessionId!, prompt });
     },
     onSuccess: (result) => {
       console.log("Result:", result);
-      const streamId = result.data.stream_id
-      console.log("Stream ID:", streamId);
-      setStreamId(streamId)
+      const chatMessageId = result.data.chat_message_id;
+      console.log("Chat message ID:", chatMessageId);
+      setStreamId(chatMessageId);
     },
     onError: (error) => {
       console.error("Chat mutation error:", error);
-      setMessages(prev => [...prev.slice(0, -1), { type: 'assistant', content: 'Sorry, I had trouble connecting. Please try again.' }]);
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        {
+          type: "assistant",
+          content: "Sorry, I had trouble connecting. Please try again.",
+        },
+      ]);
     },
   });
 
+  const handleSendMessage = (content: string) => {
 
+    console.log("Is processing initial state: ", isProcessingMessage);
+    console.log("Is processing message: ", isProcessingMessage);
 
- const handleSendMessage = (content: string) => {
-    // ALWAYS reset auto-scroll when user sends a new message
     setAutoScroll(true);
     setIsUserScrolling(false);
-    
-    setMessages(prev => [
+    setIsProcessingMessage(true);
+    setMessages((prev) => [
       ...prev,
-      { type: 'user', content },
-      { type: 'assistant', content: '' }
+      { type: "user", content },
+      { type: "assistant", content: "" },
     ]);
-    
+
     chatMutation({
       prompt: content,
     });
-    
+
     if (content === inputValue) {
-      setInputValue('');
+      setInputValue("");
     }
   };
 
-
   useEffect(() => {
     if (streamId) {
-      createStreamManager({ 
-        sessionId: sessionId!, 
-        streamId: streamId!, 
+      createStreamManager({
+        sessionId: sessionId!,
+        streamId: streamId!,
         onStreamStart() {
-          setStreamId(streamId!)
+          setStreamId(streamId!);
           const setJobStatus = useUserStore.getState().setJobStatus;
           setJobStatus([]);
         },
@@ -86,21 +99,22 @@ export const Chat = () => {
           setStreamId(null);
           const setJobStatus = useUserStore.getState().setJobStatus;
           setJobStatus([]);
+          setIsProcessingMessage(false);
         },
         onStreaming: (chunk) => {
           console.log("Chunk:", chunk);
-          setMessages(prev => {
+          setMessages((prev) => {
             const newMessages = [...prev];
             const lastMessage = newMessages[newMessages.length - 1];
-            
+
             // If the last message is from assistant, append the chunk
-            if (lastMessage && lastMessage.type === 'assistant') {
+            if (lastMessage && lastMessage.type === "assistant") {
               lastMessage.content += chunk;
             } else {
               // If no assistant message exists, create one
-              newMessages.push({ type: 'assistant', content: chunk });
+              newMessages.push({ type: "assistant", content: chunk });
             }
-            
+
             return newMessages;
           });
         },
@@ -113,35 +127,35 @@ export const Chat = () => {
           // firstly we need to stop the already in progress job status and then keep the current one in progress.
           const jobStatus = useUserStore.getState().jobStatus;
           const setJobStatus = useUserStore.getState().setJobStatus;
-          const newJobStatus = jobStatus.map(job => ({
+          const newJobStatus = jobStatus.map((job) => ({
             ...job,
-            isInProgress: false
+            isInProgress: false,
           }));
           const currentJobStatus = {
             id: uuidv4(),
             message: status.message,
             isInProgress: true,
-            streamId: streamId!
-          }
+            streamId: streamId!,
+          };
           setJobStatus([...newJobStatus, currentJobStatus]);
           console.log("New job status: ", newJobStatus);
-        }
+        },
       });
     }
-  }, [sessionId, streamId, setStreamId, setStorymapContent]);
+  }, [sessionId, streamId, setStreamId, setStorymapContent, setIsProcessingMessage]);
 
   return (
     <div className="w-full h-full flex flex-col bg-pearl-gray/20 relative z-0">
       <ChatHeader />
-      <ChatMessages 
-        messages={messages} 
+      <ChatMessages
+        messages={messages}
         onSendMessage={handleSendMessage}
         autoScroll={autoScroll}
         setAutoScroll={setAutoScroll}
         isUserScrolling={isUserScrolling}
         setIsUserScrolling={setIsUserScrolling}
-        />
-      <ChatInput 
+      />
+      <ChatInput
         inputValue={inputValue}
         setInputValue={setInputValue}
         onSendMessage={handleSendMessage}
@@ -152,22 +166,27 @@ export const Chat = () => {
 
 const ChatHeader = () => {
   // const { selectedTemplate } = useUserStore();
-  
+
   return (
     <div className="w-full h-11 flex items-center justify-between gap-2 px-4 border-b border-border/30 relative">
       <div className="relative flex items-center gap-1">
         <div className="relative w-6 h-6 rounded-full">
           <LocationPin />
         </div>
-        <span className="text-sm font-medium text-accent-foreground">Interactive Presentation Agent</span>
+        <span className="text-sm font-medium text-accent-foreground">
+          PlaceStory Agent
+        </span>
       </div>
-      <div className="flex items-center border border-border/30 rounded-sm">
-      </div>
+      <div className="flex items-center border border-border/30 rounded-sm"></div>
     </div>
   );
 };
 
-const QueryPrompts = ({ onSendMessage }: { onSendMessage: (content: string) => void }) => {
+const QueryPrompts = ({
+  onSendMessage,
+}: {
+  onSendMessage: (content: string) => void;
+}) => {
   return (
     <div className="p-4 space-y-2">
       <div className="text-xs text-muted-foreground mb-3 text-center">
@@ -188,20 +207,20 @@ const QueryPrompts = ({ onSendMessage }: { onSendMessage: (content: string) => v
   );
 };
 
-const ChatMessages = ({ 
-  messages, 
-  onSendMessage, 
-  autoScroll, 
-  setAutoScroll, 
-  isUserScrolling, 
+const ChatMessages = ({
+  messages,
+  onSendMessage,
+  autoScroll,
+  setAutoScroll,
+  isUserScrolling,
   setIsUserScrolling,
-}: { 
-  messages: Array<{type: 'user' | 'assistant', content: string}>,
-  onSendMessage: (content: string) => void,
-  autoScroll: boolean,
-  setAutoScroll: (value: boolean) => void,
-  isUserScrolling: boolean,
-  setIsUserScrolling: (value: boolean) => void,
+}: {
+  messages: Array<{ type: "user" | "assistant"; content: string }>;
+  onSendMessage: (content: string) => void;
+  autoScroll: boolean;
+  setAutoScroll: (value: boolean) => void;
+  isUserScrolling: boolean;
+  setIsUserScrolling: (value: boolean) => void;
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -220,16 +239,17 @@ const ChatMessages = ({
   // Check if user is near the bottom (within 100px)
   const isNearBottom = () => {
     if (!scrollContainerRef.current) return true;
-    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    const { scrollTop, scrollHeight, clientHeight } =
+      scrollContainerRef.current;
     return scrollHeight - scrollTop - clientHeight < 100;
   };
 
   // Handle manual scroll - detect user intervention
   const handleScroll = () => {
     if (!scrollContainerRef.current) return;
-    
+
     const isAtBottom = isNearBottom();
-    
+
     // If user scrolled away from bottom, disable auto-scroll
     if (!isAtBottom && !isUserScrolling) {
       setAutoScroll(false);
@@ -256,34 +276,43 @@ const ChatMessages = ({
   }, [messages, scrollToBottom]);
 
   return (
-    <div 
+    <div
       ref={scrollContainerRef}
       onScroll={handleScroll}
       className="flex-1 flex-col overflow-y-auto relative mb-2"
     >
-      {messages.length === 0 && (
-        <QueryPrompts onSendMessage={onSendMessage} />
-      )}
-      
+      {messages.length === 0 && <QueryPrompts onSendMessage={onSendMessage} />}
+
       {messages.length > 0 && (
         <div className="px-4 py-4">
           {messages.map((message, index) => (
             <div key={index} className="flex gap-2">
-              <div className={`w-full ${message.type === "assistant" && "flex flex-col"}`}>
-                <div className={`${message.type === 'user' ? 'px-3 py-2 flex items-center' : 'px-1 py-2'} rounded-md text-sm text-graphite font-light ${
-                  message.type === 'user'
-                    ? 'bg-pearl-gray border border-border/20 text-md text-graphite font-normal'
-                    : ''
-                }`}>
-                  
+              <div
+                className={`w-full ${
+                  message.type === "assistant" && "flex flex-col"
+                }`}
+              >
+                <div
+                  className={`${
+                    message.type === "user"
+                      ? "px-3 py-2 flex items-center"
+                      : "px-1 py-2"
+                  } rounded-md text-sm text-graphite font-light ${
+                    message.type === "user"
+                      ? "bg-pearl-gray border border-border/20 text-md text-graphite font-normal"
+                      : ""
+                  }`}
+                >
                   {message.type === "assistant" && (
                     <div className="flex items-center justify-start gap-2 mt-3">
                       <span className="w-2 h-2 rounded-full bg-orange-600"></span>
-                      <span className="text-xs text-border font-light">IP Agent</span>
+                      <span className="text-xs text-border font-light">
+                        IP Agent
+                      </span>
                     </div>
                   )}
 
-                  <ReactMarkdown 
+                  <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     rehypePlugins={[rehypeRaw]}
                     components={{
@@ -297,7 +326,11 @@ const ChatMessages = ({
                               wrapLongLines
                               language={match[1]}
                               // @ts-expect-error ignore it
-                              style={styles.solarizedDarkAtom as { [key: string]: React.CSSProperties }}
+                              style={
+                                solarizedDarkAtom as {
+                                  [key: string]: React.CSSProperties;
+                                }
+                              }
                               customStyle={{
                                 margin: 0,
                                 borderRadius: "0.25rem",
@@ -330,35 +363,50 @@ const ChatMessages = ({
                       },
                       h1({ children, ...props }) {
                         return (
-                          <h1 className="text-lg font-semibold mt-2 mb-4" {...props}>
+                          <h1
+                            className="text-lg font-semibold mt-2 mb-4"
+                            {...props}
+                          >
                             {children}
                           </h1>
                         );
                       },
                       h2({ children, ...props }) {
                         return (
-                          <h2 className="text-base font-semibold mt-5 mb-3" {...props}>
+                          <h2
+                            className="text-base font-semibold mt-5 mb-3"
+                            {...props}
+                          >
                             {children}
                           </h2>
                         );
                       },
                       h3({ children, ...props }) {
                         return (
-                          <h3 className="text-base font-semibold mt-4 mb-2" {...props}>
+                          <h3
+                            className="text-base font-semibold mt-4 mb-2"
+                            {...props}
+                          >
                             {children}
                           </h3>
                         );
                       },
                       ul({ children, ...props }) {
                         return (
-                          <ul className="list-disc pl-6 mb-4 space-y-1" {...props}>
+                          <ul
+                            className="list-disc pl-6 mb-4 space-y-1"
+                            {...props}
+                          >
                             {children}
                           </ul>
                         );
                       },
                       ol({ children, ...props }) {
                         return (
-                          <ol className="list-decimal pl-6 mb-4 space-y-1" {...props}>
+                          <ol
+                            className="list-decimal pl-6 mb-4 space-y-1"
+                            {...props}
+                          >
                             {children}
                           </ol>
                         );
@@ -438,11 +486,11 @@ const ChatMessages = ({
                   {message.type === "assistant" && !streamId && (
                     <div className="flex items-center justify-end gap-2">
                       <Tooltip>
-                        <TooltipTrigger> 
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="w-4 h-4 text-border hover:text-obsidian-black hover:cursor-pointer" 
+                        <TooltipTrigger>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-4 h-4 text-border hover:text-obsidian-black hover:cursor-pointer"
                             onClick={() => {
                               navigator.clipboard.writeText(message.content);
                               setShowCopiedMessage(true);
@@ -452,7 +500,10 @@ const ChatMessages = ({
                             }}
                           >
                             {showCopiedMessage ? (
-                              <Check className="w-4 h-4 transition-all duration-300" strokeWidth={1.5} />
+                              <Check
+                                className="w-4 h-4 transition-all duration-300"
+                                strokeWidth={1.5}
+                              />
                             ) : (
                               <Copy className="w-4 h-4" strokeWidth={1.5} />
                             )}
@@ -480,15 +531,18 @@ const ChatMessages = ({
   );
 };
 
-const ChatInput = ({ 
-  inputValue, 
-  setInputValue, 
-  onSendMessage 
-}: { 
-  inputValue: string,
-  setInputValue: (value: string) => void,
-  onSendMessage: (content: string) => void 
+const ChatInput = ({
+  inputValue,
+  setInputValue,
+  onSendMessage,
+}: {
+  inputValue: string;
+  setInputValue: (value: string) => void;
+  onSendMessage: (content: string) => void;
 }) => {
+
+  const { isProcessingMessage } = useUserStore();
+
   const handleSend = () => {
     if (inputValue.trim()) {
       onSendMessage(inputValue);
@@ -496,7 +550,7 @@ const ChatInput = ({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -505,7 +559,7 @@ const ChatInput = ({
   return (
     <div className="bg-transparent px-3 mb-2 shadow-lg shadow-background relative z-20">
       <div className="relative bg-none">
-        <TheTicker />
+        {isProcessingMessage ? <TheTicker /> : null}
         <Textarea
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
@@ -530,10 +584,8 @@ const ChatInput = ({
 
 export default Chat;
 
-
-
 const TheTicker = () => {
-  const { streamId } = useUserStore();
+  const { isProcessingMessage } = useUserStore();
   const [dots, setDots] = useState(0);
 
   useEffect(() => {
@@ -543,23 +595,27 @@ const TheTicker = () => {
     return () => clearInterval(interval);
   }, []);
   return (
-<div className={`absolute -top-7.5 -z-1 w-[90%] left-1/2 h-8 bg-primary-foreground border-t 
+    <div
+      className={`absolute -top-7.5 -z-1 w-[90%] left-1/2 h-8 bg-primary-foreground border-t 
   border-x rounded-t-sm border-border/30 flex items-center justify-between px-4 -translate-x-1/2 transition-all duration-300
-  ${streamId ? "translate-y-0" : "translate-y-full"}`}>
+  ${isProcessingMessage ? "translate-y-0" : "translate-y-full"}`}
+    >
       <div className="flex items-center gap-2">
         <div className="w-4 h-4 rounded-full bg-transparent flex items-center justify-center">
           <LocationPin />
         </div>
-        <span className="text-sm text-graphite font-medium tracking-tighter">Agent is running</span>
+        <span className="text-sm text-graphite font-medium tracking-tighter">
+          Agent is running
+        </span>
         {Array.from({ length: dots }).map((_, index) => (
-          <span key={index} className="text-sm text-graphite -ml-1.5">.</span>
+          <span key={index} className="text-sm text-graphite -ml-1.5">
+            .
+          </span>
         ))}
       </div>
       <div className="text-sm text-muted-foreground">
         {/* {streamId ? "Processing..." : "Waiting for response..."} */}
       </div>
     </div>
-  )
-}
-
-
+  );
+};

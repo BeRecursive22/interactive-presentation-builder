@@ -17,11 +17,9 @@ export const createChatSession = async () => {
 
 interface CreateChatSessionResponse {
   data: {
-    chat_session: {
       session_id: string;
       created_at: string;
       session_title: string;
-    };
   };
   status: "success" | "error";
 }

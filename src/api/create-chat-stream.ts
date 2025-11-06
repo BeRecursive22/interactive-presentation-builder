@@ -29,6 +29,6 @@ export const createChatStream = async (props: ChatProps) => {
 interface ChatStreamResponse {
     success: "success" | "error",
     data: {
-        stream_id: string
+        chat_message_id: string
     }
 }

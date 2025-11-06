@@ -17,6 +17,8 @@ interface UserStore {
   setStorymapContent: (storymapContent: StorymapTemplate | null) => void;
   jobStatus: JobStatusType[];
   setJobStatus: (status: JobStatusType[]) => void;
+  isProcessingMessage: boolean;
+  setIsProcessingMessage: (isProcessingMessage: boolean) => void;
 }
 
 export const useUserStore = create<UserStore>((set) => ({
@@ -28,4 +30,6 @@ export const useUserStore = create<UserStore>((set) => ({
   setStorymapContent: (storymapContent) => set({ storymapContent }),
   jobStatus: [],
   setJobStatus: (status) => set({ jobStatus: status }),
+  isProcessingMessage: false,
+  setIsProcessingMessage: (processingMessage: boolean) => set({ isProcessingMessage: processingMessage }),
 }));
