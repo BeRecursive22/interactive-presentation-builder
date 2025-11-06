@@ -68,7 +68,6 @@ export const Chat = () => {
     setAutoScroll(true);
     setIsUserScrolling(false);
     setIsProcessingMessage(true);
-
     setMessages((prev) => [
       ...prev,
       { type: "user", content },
@@ -142,7 +141,7 @@ export const Chat = () => {
         },
       });
     }
-  }, [sessionId, streamId, setStreamId, setStorymapContent]);
+  }, [sessionId, streamId, setStreamId, setStorymapContent, setIsProcessingMessage]);
 
   return (
     <div className="w-full h-full flex flex-col bg-pearl-gray/20 relative z-0">
@@ -174,7 +173,7 @@ const ChatHeader = () => {
           <LocationPin />
         </div>
         <span className="text-sm font-medium text-accent-foreground">
-          Interactive Presentation Agent
+          PlaceStory Agent
         </span>
       </div>
       <div className="flex items-center border border-border/30 rounded-sm"></div>
@@ -585,7 +584,7 @@ const ChatInput = ({
 export default Chat;
 
 const TheTicker = () => {
-  const { streamId } = useUserStore();
+  const { isProcessingMessage } = useUserStore();
   const [dots, setDots] = useState(0);
 
   useEffect(() => {
@@ -598,7 +597,7 @@ const TheTicker = () => {
     <div
       className={`absolute -top-7.5 -z-1 w-[90%] left-1/2 h-8 bg-primary-foreground border-t 
   border-x rounded-t-sm border-border/30 flex items-center justify-between px-4 -translate-x-1/2 transition-all duration-300
-  ${streamId ? "translate-y-0" : "translate-y-full"}`}
+  ${isProcessingMessage ? "translate-y-0" : "translate-y-full"}`}
     >
       <div className="flex items-center gap-2">
         <div className="w-4 h-4 rounded-full bg-transparent flex items-center justify-center">
