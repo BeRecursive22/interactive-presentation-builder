@@ -17,6 +17,7 @@ import { ArrowRight, Check, Copy } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import solarizedDarkAtom from "react-syntax-highlighter/dist/esm/styles/prism/solarized-dark-atom";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { v4 as uuidv4 } from "uuid";
@@ -326,7 +327,7 @@ const ChatMessages = ({
                               language={match[1]}
                               // @ts-expect-error ignore it
                               style={
-                                styles.solarizedDarkAtom as {
+                                solarizedDarkAtom as {
                                   [key: string]: React.CSSProperties;
                                 }
                               }
