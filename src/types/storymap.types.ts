@@ -103,6 +103,6 @@ export type StorymapBlocks = CoverBlockType | TextBlockType | ImageBlockType | M
 
 
 export interface StorymapTemplate {
-    presentation_title: string;
-    presentation_blocks: StorymapBlocks[];
+    placestory_title: string;
+    placestory_blocks: StorymapBlocks[];
 }

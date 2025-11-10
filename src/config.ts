@@ -16,4 +16,4 @@ export const LOCAL_API_URL = "http://localhost:8000"
 //     }
 // }
 
-export const BASE_URL = API_URL
+export const BASE_URL = LOCAL_API_URL

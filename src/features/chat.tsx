@@ -23,9 +23,9 @@ import remarkGfm from "remark-gfm";
 import { v4 as uuidv4 } from "uuid";
 
 const queries = [
-  "Build me an interactive presentation for 1 S Main St, Bel Air, MD 21014 for use as a Restaurant",
-  "Build me an interactive presentation for 123 Market Street, San Francisco, CA 94105 for use as a Retail",
-  "Build me an interactive presentation for 555 Madison Avenue, New York, NY 10022 for use as an Office",
+  "Plan a placestory highlighting the redevelopment of 1 S Main St, Bel Air, MD 21014 into a farm-to-table dining destination.",
+  "Design a placestory showcasing 123 Market Street, San Francisco, CA 94105 as an innovative retail hub for emerging brands.",
+  "Craft a placestory that positions 555 Madison Avenue, New York, NY 10022 as a premium corporate headquarters for finance firms.",
 ];
 
 export const Chat = () => {
@@ -225,7 +225,7 @@ const ChatMessages = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showCopiedMessage, setShowCopiedMessage] = useState(false);
-  const { streamId, jobStatus } = useUserStore();
+  const { streamId, jobStatus, isProcessingMessage } = useUserStore();
 
   console.log("Job status: ", jobStatus);
 
@@ -307,7 +307,7 @@ const ChatMessages = ({
                     <div className="flex items-center justify-start gap-2 mt-3">
                       <span className="w-2 h-2 rounded-full bg-orange-600"></span>
                       <span className="text-xs text-border font-light">
-                        IP Agent
+                        Placestory
                       </span>
                     </div>
                   )}
@@ -483,7 +483,7 @@ const ChatMessages = ({
                   </ReactMarkdown>
 
                   {/* Copy button for assistant messages only */}
-                  {message.type === "assistant" && !streamId && (
+                  {message.type === "assistant" && !isProcessingMessage && (
                     <div className="flex items-center justify-end gap-2">
                       <Tooltip>
                         <TooltipTrigger>
