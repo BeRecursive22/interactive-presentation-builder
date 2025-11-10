@@ -225,7 +225,7 @@ const ChatMessages = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showCopiedMessage, setShowCopiedMessage] = useState(false);
-  const { streamId, jobStatus, isProcessingMessage } = useUserStore();
+  const { jobStatus, isProcessingMessage } = useUserStore();
 
   console.log("Job status: ", jobStatus);
 
