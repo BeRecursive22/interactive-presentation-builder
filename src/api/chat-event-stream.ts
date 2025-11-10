@@ -26,11 +26,14 @@ export function createStreamManager(options: StreamManagerOptions) {
     try {
       const parsedData = JSON.parse(event.data);
       console.log("Parsed Data: ", parsedData);
-      if(parsedData.type === "presentation_content"){
-        onStorymapMessage?.(parsedData.data);
-      } else if(parsedData.type === "status" || parsedData.type === "complete"){
+      if(parsedData.type === "placestory"){
+        console.log("Placestory: ", parsedData.payload);
+        onStorymapMessage?.(parsedData.payload);
+      } else if(parsedData.type === "status"){
         console.log("Status: ", parsedData);
         onJobStatus?.(parsedData);
+      } else if(parsedData.type === "message"){
+        onStreaming?.(parsedData.payload);
       } else {
         onStreaming?.(parsedData);
         console.log("Streaming: ", parsedData);

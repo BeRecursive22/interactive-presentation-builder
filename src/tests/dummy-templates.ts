@@ -3,8 +3,8 @@ import type { StorymapTemplate } from "@/types/storymap.types";
 const dummyImageUrl = "https://res.cloudinary.com/truva-production/image/upload/t_large_image/t_invisible_watermark/f_auto/oykm1v47ofwvz737xz27"
 
 export const DummyTemplate: StorymapTemplate = {
-  presentation_title: "A Premier Culinary Destination: 555 Madison Avenue",
-  presentation_blocks: [
+  placestory_title: "A Premier Culinary Destination: 555 Madison Avenue",
+  placestory_blocks: [
     {
       id: "cover_block_01",
       type: "cover" as const,

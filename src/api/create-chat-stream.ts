@@ -12,10 +12,11 @@ export const createChatStream = async (props: ChatProps) => {
     try {
         const result = await ky.post(`${BASE_URL}/v1/storymap/chat/${sessionId}`,
             {
+                timeout: 30000,
                 json: {
                     user_message: prompt
-                }
-            }
+                },
+            },
         ).json<ChatStreamResponse>()
         console.log("Result:", result);
         return result

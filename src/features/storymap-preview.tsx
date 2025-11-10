@@ -63,12 +63,12 @@ export const StorymapPreview = () => {
   return (
     <div className="w-full h-full">
       <div className="w-full h-12 bg-neutral-200 flex items-center justify-between p-2 px-6 shadow-md">
-        <span className="text-sm font-medium">{storymapContent?.presentation_title || "Presentation Title here..."}</span>
+        <span className="text-sm font-medium">{storymapContent?.placestory_title || "Presentation Title here..."}</span>
         <Button onClick={() => exportContentAsMarkdown()} variant="outline">Export</Button>
       </div>
       <div className="w-full h-[calc(100%-48px)] overflow-y-auto">
         {storymapContent && (
-          <RenderBlocks blocks={storymapContent.presentation_blocks} />
+          <RenderBlocks blocks={storymapContent.placestory_blocks} />
         )}
       </div>
     </div>

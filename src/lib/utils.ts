@@ -96,13 +96,13 @@ export const mdForBlock = (presentationBlock: StorymapBlocks, level = 2): string
 export const storymapToMarkdown = (t: StorymapTemplate): string => {
   const frontmatter = [
     "---",
-    `Title: ${t.presentation_title}`,
+    `Title: ${t.placestory_title}`,
     "Exported: true",
     "---",
     "",
   ].join("\n");
-  const title = `# ${t.presentation_title}\n\n`;
-  const body = t.presentation_blocks.map(b => mdForBlock(b, 2)).join("\n");
+  const title = `# ${t.placestory_title}\n\n`;
+  const body = t.placestory_blocks.map(b => mdForBlock(b, 2)).join("\n");
   return frontmatter + title + body;
 }
 
